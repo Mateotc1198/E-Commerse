@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-commerce React Premium</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- React & ReactDOM (CDNs para ejecutar sin NodeJS) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <!-- Código React Integrado -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const ProductDetails = ({ product, onBack, onAddToCart }) => {
+      const [qty, setQty] = useState(1);
+      const [size, setSize] = useState("M");
+
+      const realPrice = product.price < 5000 ? product.price * 4000 : product.price;
+      const formattedPrice = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(realPrice);
+
+      return (
+        <div className="pdp-wrapper">
+          <div className="pdp-breadcrumbs">
+            <span>Inicio {'>'} {product.category} {'>'} {product.title.split(' ')[0]}</span>
+            <button onClick={onBack} className="pdp-back-btn">{'<'} Regresar a la búsqueda</button>
+          </div>
+
+          <div className="pdp-container">
+            <div className="pdp-gallery">
+              <div className="pdp-image-box"><img src={product.image} alt={product.title} /></div>
+              <div className="pdp-image-box"><img src={product.image} alt={product.title} /></div>
+              <div className="pdp-image-box"><img src={product.image} alt={product.title} /></div>
+              <div className="pdp-image-box"><img src={product.image} alt={product.title} /></div>
+            </div>
+
+            <div className="pdp-info">
+              <h1 className="pdp-title">{product.title}</h1>
+              <h2 className="pdp-price">{formattedPrice}</h2>
+              <p className="pdp-desc">
+                Este producto está fabricado con los mejores estándares de calidad para ofrecerte una funcionalidad insuperable y un estilo único. Recomendado por {product.rating?.count || 100} usuarios.
+              </p>
+
+              {(product.category.toLowerCase() === 'ropa' || product.category.toLowerCase().includes('clothing')) && (
+                <div className="pdp-size">
+                  <p style={{ marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Size</p>
+                  <div className="size-options">
+                    <button className={`size-btn ${size === 'S' ? 'active' : ''}`} onClick={() => setSize('S')}>S</button>
+                    <button className={`size-btn ${size === 'M' ? 'active' : ''}`} onClick={() => setSize('M')}>M</button>
+                    <button className={`size-btn ${size === 'L' ? 'active' : ''}`} onClick={() => setSize('L')}>L</button>
+                  </div>
+                </div>
+              )}
+
+              <div className="pdp-actions-row">
+                <div className="pdp-quantity">
+                  <button onClick={() => setQty(Math.max(1, qty - 1))}>-</button>
+                  <span>{qty}</span>
+                  <button onClick={() => setQty(qty + 1)}>+</button>
+                </div>
+                <button className="pdp-add-btn" onClick={() => {
+                  for (let i = 0; i < qty; i++) onAddToCart(product);
+                  setQty(1);
+                  alert("¡Producto añadido al carrito!");
+                }}>Add to Cart</button>
+              </div>
+
+              <div className="pdp-divider"><span>OR</span></div>
+              <button className="pdp-buy-btn">Buy now</button>
+
+              <div className="pdp-safe-checkout">
+                <p>GUARANTEED <span style={{ color: '#10b981' }}>SAFE</span> CHECKOUT</p>
+                <div className="payment-icons">
+                  💳 🟢 🔵 🟠 🪙
+                </div>
+                <span className="pdp-secure">Your Payment is 100% Secure</span>
+              </div>
+
+              <div className="pdp-metadata">
+                <p><strong>Brand:</strong> MT Studio</p>
+                <p><strong>SKU:</strong> {product.id}00X9</p>
+                <p><strong>Category:</strong> {product.category}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    function App() {
+      const [products, setProducts] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [cart, setCart] = useState([]);
+      const [isCartOpen, setIsCartOpen] = useState(false);
+      const [error, setError] = useState(null);
+
+      const [searchQuery, setSearchQuery] = useState("");
+      const [selectedCategory, setSelectedCategory] = useState("all");
+      const [selectedProduct, setSelectedProduct] = useState(null);
+
+      // Fetch a la API con Fallback
+      useEffect(() => {
+        fetch('https://fakestoreapi.com/products')
+          .then(res => {
+            if (!res.ok) throw new Error("Error de servidor");
+            return res.json();
+          })
+          .then(data => {
+            setProducts(data);
+          })
+          .catch(err => {
+            console.warn("Usando datos de respaldo. La API falló o fue bloqueada localmente:", err);
+            setProducts([
+              { id: 1, title: "Auriculares Premium Bluetooth", price: 450000, category: "Electrónica", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.8, count: 340 } },
+              { id: 2, title: "Reloj Inteligente Minimalista", price: 800000, category: "Electrónica", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.5, count: 120 } },
+              { id: 3, title: "Zapatillas Deportivas Urbanas", price: 320000, category: "Ropa", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.3, count: 89 } },
+              { id: 4, title: "Gafas de Sol Clásicas", price: 180000, category: "Accesorios", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.7, count: 210 } },
+              { id: 5, title: "Cámara Réflex Profesional", price: 3500000, category: "Electrónica", image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.9, count: 55 } },
+              { id: 6, title: "Mochila de Cuero Vintage", price: 480000, category: "Accesorios", image: "https://images.unsplash.com/photo-1491637639811-60e2756cc1c7?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.6, count: 114 } },
+              { id: 7, title: "Teclado Mecánico RGB", price: 580000, category: "Electrónica", image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.8, count: 432 } },
+              { id: 8, title: "Chaqueta Cortavientos", price: 260000, category: "Ropa", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.2, count: 76 } },
+              { id: 9, title: "Cargador Inalámbrico", price: 120000, category: "Electrónica", image: "https://images.unsplash.com/photo-1615526675159-e248c3021d3f?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.4, count: 322 } },
+              { id: 10, title: "Botas de Invierno Premium", price: 420000, category: "Ropa", image: "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.6, count: 59 } },
+              { id: 11, title: "Bolso de Mano Femenino", price: 340000, category: "Accesorios", image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.8, count: 145 } },
+              { id: 12, title: "Tablet Pro 11 Pulgadas", price: 2100000, category: "Electrónica", image: "https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?auto=format&fit=crop&w=1200&q=95", rating: { rate: 4.9, count: 87 } }
+            ]);
+            setError("Modo Demostración Local (La API externa falló pero la tienda sigue funcional).");
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }, []);
+
+      const addToCart = (product) => {
+        setCart(prevCart => {
+          const exists = prevCart.find(item => item.id === product.id);
+          if (exists) {
+            return prevCart.map(item =>
+              item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+            );
+          }
+          return [...prevCart, { ...product, quantity: 1 }];
+        });
+      };
+
+      const removeFromCart = (id) => {
+        setCart(prevCart => prevCart.filter(item => item.id !== id));
+      };
+
+      // Formateador de Precios (Colombian Peso)
+      const formatCOP = (price) => {
+        // En FakeStoreAPI los precios son en dólares pequeños (ej. 109.95), si es así, simulamos un precio en pesos colombianos multiplicándolo por 4000.
+        // Si ya cargaron la data fallback gigante, no lo multiplicamos.
+        const finalPrice = price < 5000 ? price * 4000 : price;
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(finalPrice);
+      };
+
+      const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+      const categories = ["all", ...new Set(products.map(p => p.category))];
+
+      const filteredProducts = products.filter(product => {
+        const matchSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchCategory = selectedCategory === "all" || product.category === selectedCategory;
+        return matchSearch && matchCategory;
+      });
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+          <nav className="navbar">
+            <div className="nav-container">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="8" width="18" height="13" rx="2" stroke="var(--accent)" strokeWidth="2" />
+                  <path d="M16 10V6C16 3.79086 14.2091 2 12 2V2C9.79086 2 8 3.79086 8 6V10" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M12 13V15" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <h1>MT Store</h1>
+              </div>
+              <div className="search-container">
+                <input
+                  type="text"
+                  placeholder="Busca tus productos favoritos..."
+                  className="search-input"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <button className="cart-button" onClick={() => setIsCartOpen(true)}>
+                Carrito ({cartCount})
+              </button>
+            </div>
+          </nav>
+
+          {selectedProduct ? (
+            <ProductDetails
+              product={selectedProduct}
+              onBack={() => setSelectedProduct(null)}
+              onAddToCart={addToCart}
+            />
+          ) : (
+            <>
+              <div className="hero-banner">
+                <h2>Rebajas de Temporada</h2>
+                <p>Descubre la nueva colección con hasta 50% de descuento.</p>
+              </div>
+
+              <main className="container">
+                {loading ? (
+                  <div className="loader">Cargando catálogo...</div>
+                ) : (
+                  <>
+                    <div className="filters-container">
+                      {categories.map(cat => (
+                        <button
+                          key={cat}
+                          className={`filter-btn ${selectedCategory === cat ? 'active' : ''}`}
+                          onClick={() => setSelectedCategory(cat)}
+                        >
+                          {cat === "all" ? "Todas" : cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {filteredProducts.length === 0 ? (
+                      <div className="empty-state">
+                        <h3>Sin resultados para tu búsqueda</h3>
+                        <p>Intenta con otros términos o usa los filtros de categoría superiores.</p>
+                      </div>
+                    ) : (
+                      <div className="products-grid">
+                        {filteredProducts.map(product => (
+                          <article key={product.id} className="product-card" onClick={() => setSelectedProduct(product)} style={{ cursor: 'pointer' }}>
+                            <div className="image-wrapper">
+                              <img src={product.image} alt={product.title} className="product-image" />
+                            </div>
+                            <p className="product-category">{product.category}</p>
+                            <h2 className="product-title">{product.title.length > 45 ? product.title.substring(0, 45) + '...' : product.title}</h2>
+                            <div className="rating">
+                              {'⭐'.repeat(Math.round(product.rating?.rate || 4))}
+                              <span>({product.rating?.count || 100} opiniones)</span>
+                            </div>
+                            <div className="product-footer">
+                              <span className="price">{formatCOP(product.price)}</span>
+                              <button className="add-button" onClick={(e) => { e.stopPropagation(); addToCart(product); }}>
+                                Añadir
+                              </button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </main>
+            </>
+          )}
+
+          {isCartOpen && (
+            <div className="cart-overlay" onClick={() => setIsCartOpen(false)}>
+              <div className="cart-drawer" onClick={e => e.stopPropagation()}>
+                <div className="drawer-header">
+                  <h2>Cesta</h2>
+                  <button className="close-btn" onClick={() => setIsCartOpen(false)}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6L18 18" /></svg>
+                  </button>
+                </div>
+
+                <div className="drawer-items">
+                  {cart.length === 0 ? (
+                    <div className="empty-cart">
+                      <p>Tu cesta está vacía.</p>
+                      <button onClick={() => setIsCartOpen(false)} className="add-button" style={{ marginTop: '20px', padding: '12px 30px', width: '100%' }}>Ver Catálogo</button>
+                    </div>
+                  ) : (
+                    cart.map(item => (
+                      <div key={item.id} className="drawer-item">
+                        <img src={item.image} alt={item.title} />
+                        <div className="drawer-item-info">
+                          <h4>{item.title.substring(0, 30)}...</h4>
+                          <p className="item-price">{formatCOP(item.price)}</p>
+                          <div className="drawer-item-controls">
+                            <span>Cant: {item.quantity}</span>
+                            <button className="remove-btn" onClick={() => removeFromCart(item.id)}>Quitar</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {cart.length > 0 && (
+                  <div className="drawer-footer">
+                    <div className="total">
+                      <span>Subtotal</span>
+                      <span>{formatCOP(cartTotal)}</span>
+                    </div>
+                    <button className="checkout-btn">Pagar Cesta</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <footer className="site-footer">
+            <div className="footer-container">
+              <div className="footer-links">
+                <a href="#">Sobre Nosotros</a>
+                <a href="#">Centro de Ayuda</a>
+                <a href="#">Políticas de Devolución</a>
+                <a href="#">Trabaja con MT</a>
+              </div>
+              <p>© 2026 MT Store - Todos los derechos reservados. Desarrollado por Mateo Torres.</p>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+
+</html>
